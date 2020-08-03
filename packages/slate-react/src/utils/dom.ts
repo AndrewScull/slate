@@ -12,6 +12,7 @@ import DOMText = globalThis.Text
 import DOMRange = globalThis.Range
 import DOMSelection = globalThis.Selection
 import DOMStaticRange = globalThis.StaticRange
+
 export {
   DOMNode,
   DOMComment,
@@ -102,10 +103,11 @@ export const normalizeDOMPoint = (domPoint: DOMPoint): DOMPoint => {
  * Determines wether the active element is nested within a shadowRoot
  */
 
-export const hasShadowRoot = () => {
-  return !!(
-    window.document.activeElement && window.document.activeElement.shadowRoot
-  )
+export const hasShadowRoot = (n: DOMNode) => {
+  for (let s = n.parentNode; s; s = s.parentNode) {
+    if (s instanceof ShadowRoot) return true
+  }
+  return false
 }
 
 /**
@@ -113,12 +115,15 @@ export const hasShadowRoot = () => {
  * otherwise it returns the Document Object.
  */
 
-export const getDocumentOrShadowRoot = (): Document | ShadowRoot => {
-  return (
-    (window.document.activeElement &&
-      window.document.activeElement.shadowRoot) ||
-    window.document
-  )
+export const getDocumentOrShadowRoot = (n: DOMNode): Document | ShadowRoot => {
+  for (let s = n.parentNode; s; s = s.parentNode) {
+    if (s instanceof Document || s instanceof ShadowRoot) {
+      // Firefox doesn't implement getSelection on ShadowRoot but document's
+      // getSelection goes into the ShadowRoot already.
+      if (s.getSelection !== undefined) return s
+    }
+  }
+  return window.document
 }
 
 /**

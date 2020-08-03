@@ -107,7 +107,7 @@ export const ReactEditor = {
     const el = ReactEditor.toDOMNode(editor, editor)
     IS_FOCUSED.set(editor, false)
 
-    if (getDocumentOrShadowRoot().activeElement === el) {
+    if (getDocumentOrShadowRoot(el).activeElement === el) {
       el.blur()
     }
   },
@@ -120,7 +120,7 @@ export const ReactEditor = {
     const el = ReactEditor.toDOMNode(editor, editor)
     IS_FOCUSED.set(editor, true)
 
-    if (getDocumentOrShadowRoot().activeElement !== el) {
+    if (getDocumentOrShadowRoot(el).activeElement !== el) {
       el.focus({ preventScroll: true })
     }
   },
@@ -130,8 +130,9 @@ export const ReactEditor = {
    */
 
   deselect(editor: ReactEditor): void {
+    const el = ReactEditor.toDOMNode(editor, editor)
     const { selection } = editor
-    const domSelection = getDocumentOrShadowRoot().getSelection()
+    const domSelection = getDocumentOrShadowRoot(el).getSelection()
 
     if (domSelection && domSelection.rangeCount > 0) {
       domSelection.removeAllRanges()
@@ -492,7 +493,7 @@ export const ReactEditor = {
         // There's a bug in chrome that always returns `true` for `isCollapsed`
         // for a Selection that comes from a ShadowRoot.
         // https://bugs.chromium.org/p/chromium/issues/detail?id=447523
-        if (hasShadowRoot()) {
+        if (hasShadowRoot(el)) {
           isCollapsed =
             domRange.anchorNode === domRange.focusNode &&
             domRange.anchorOffset === domRange.focusOffset

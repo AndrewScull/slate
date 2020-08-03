@@ -143,7 +143,8 @@ export const Editable = (props: EditableProps) => {
   // Whenever the editor updates, make sure the DOM selection state is in sync.
   useIsomorphicLayoutEffect(() => {
     const { selection } = editor
-    const domSelection = getDocumentOrShadowRoot().getSelection()
+    const el = ReactEditor.toDOMNode(editor, editor)
+    const domSelection = getDocumentOrShadowRoot(el).getSelection()
 
     if (state.isComposing || !domSelection || !ReactEditor.isFocused(editor)) {
       return
@@ -177,7 +178,6 @@ export const Editable = (props: EditableProps) => {
     }
 
     // Otherwise the DOM selection is out of sync, so update it.
-    const el = ReactEditor.toDOMNode(editor, editor)
     state.isUpdatingSelection = true
     domSelection.removeAllRanges()
 
@@ -378,9 +378,9 @@ export const Editable = (props: EditableProps) => {
   const onDOMSelectionChange = useCallback(
     throttle(() => {
       if (!readOnly && !state.isComposing && !state.isUpdatingSelection) {
-        const { activeElement } = getDocumentOrShadowRoot()
         const el = ReactEditor.toDOMNode(editor, editor)
-        const domSelection = getDocumentOrShadowRoot().getSelection()
+        const { activeElement } = getDocumentOrShadowRoot(el)
+        const domSelection = getDocumentOrShadowRoot(el).getSelection()
 
         if (activeElement === el) {
           state.latestElement = activeElement
@@ -420,13 +420,11 @@ export const Editable = (props: EditableProps) => {
   // fire for any change to the selection inside the editor. (2019/11/04)
   // https://github.com/facebook/react/issues/5785
   useIsomorphicLayoutEffect(() => {
-    getDocumentOrShadowRoot().addEventListener(
-      'selectionchange',
-      onDOMSelectionChange
-    )
+    const el = ReactEditor.toDOMNode(editor, editor)
+    window.document.addEventListener('selectionchange', onDOMSelectionChange)
 
     return () => {
-      getDocumentOrShadowRoot().removeEventListener(
+      window.document.removeEventListener(
         'selectionchange',
         onDOMSelectionChange
       )
@@ -518,14 +516,14 @@ export const Editable = (props: EditableProps) => {
             // one, this is due to the window being blurred when the tab
             // itself becomes unfocused, so we want to abort early to allow to
             // editor to stay focused when the tab becomes focused again.
+            const el = ReactEditor.toDOMNode(editor, editor)
             if (
-              state.latestElement === getDocumentOrShadowRoot().activeElement
+              state.latestElement === getDocumentOrShadowRoot(el).activeElement
             ) {
               return
             }
 
             const { relatedTarget } = event
-            const el = ReactEditor.toDOMNode(editor, editor)
 
             // COMPAT: The event should be ignored if the focus is returning
             // to the editor from an embedded editable element (eg. an <input>
@@ -724,7 +722,7 @@ export const Editable = (props: EditableProps) => {
               !isEventHandled(event, attributes.onFocus)
             ) {
               const el = ReactEditor.toDOMNode(editor, editor)
-              state.latestElement = getDocumentOrShadowRoot().activeElement
+              state.latestElement = getDocumentOrShadowRoot(el).activeElement
 
               // COMPAT: If the editor has nested editable elements, the focus
               // can go to them. In Firefox, this must be prevented because it
