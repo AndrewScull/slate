@@ -9,6 +9,29 @@ const ShadowDOM = () => {
 
   useEffect(() => {
     if (container.current) {
+      // Create a shadow DOM and render the InnerShadowDOM within
+      const shadowRoot = container.current.attachShadow({ mode: 'open' })
+      const reactRoot = document.createElement('div')
+      shadowRoot.appendChild(reactRoot)
+      ReactDOM.render((
+          <div>
+            <h1>One Shadow DOM</h1>
+            <ShadowEditor />
+            <h1>Nested Shadow DOM</h1>
+            <InnerShadowDOM />
+          </div>
+        ), reactRoot)
+    }
+  }, [container])
+
+  return <div ref={container} />
+}
+
+const InnerShadowDOM = () => {
+  const container = useRef(null)
+
+  useEffect(() => {
+    if (container.current) {
       // Create a shadow DOM and render the Editor within
       const shadowRoot = container.current.attachShadow({ mode: 'open' })
       const reactRoot = document.createElement('div')
